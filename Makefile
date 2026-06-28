@@ -26,6 +26,16 @@ install: build
 open: install
 	open $(BUNDLE)
 
+dmg: install
+	@rm -rf /tmp/$(APP)-dmg $(APP).dmg
+	@mkdir -p /tmp/$(APP)-dmg
+	@cp -r $(BUNDLE) /tmp/$(APP)-dmg/
+	@ln -s /Applications /tmp/$(APP)-dmg/Applications
+	@hdiutil create -volname "$(APP)" -srcfolder /tmp/$(APP)-dmg \
+		-ov -format UDZO -quiet $(APP).dmg
+	@rm -rf /tmp/$(APP)-dmg
+	@echo "✓ Created $(APP).dmg"
+
 clean:
 	swift package clean
-	rm -rf $(BUNDLE)
+	rm -rf $(BUNDLE) $(APP).dmg

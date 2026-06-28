@@ -31,15 +31,20 @@ macOS menu bar app that shows Claude and ChatGPT/Codex quota at a glance.
 
 ## Install
 
-### Quick (recommended)
+### Option A — DMG (easiest)
+
+Download `UsageViewer.dmg` from [Releases](https://github.com/jetsadaton/usage-viewer/releases), open it, drag **UsageViewer** to Applications.
+
+> First launch: **right-click → Open** to bypass Gatekeeper (app is not notarized).
+
+### Option B — Build from source
 
 ```bash
 git clone https://github.com/jetsadaton/usage-viewer
 cd usage-viewer
-make open
+make open        # build + launch immediately
+make dmg         # build UsageViewer.dmg for distribution
 ```
-
-`make open` builds a release binary, wraps it into `UsageViewer.app`, and launches it.
 
 ### First launch
 
