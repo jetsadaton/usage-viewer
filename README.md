@@ -34,7 +34,7 @@ macOS menu bar app that shows Claude and ChatGPT/Codex quota at a glance.
 ### Quick (recommended)
 
 ```bash
-git clone https://github.com/yourname/usage-viewer
+git clone https://github.com/jetsadaton/usage-viewer
 cd usage-viewer
 make open
 ```
