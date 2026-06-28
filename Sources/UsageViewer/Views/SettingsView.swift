@@ -14,7 +14,8 @@ struct SettingsView: View {
     @AppStorage("showCodex")          var showCodex          = true
     @AppStorage("showCodexSecondary") var showCodexSecondary = true
     @AppStorage("menuBarStyle")       var menuBarStyle       = "percent"
-    @AppStorage("menuBarLabels")      var menuBarLabels      = true
+    @AppStorage("menuBarLabelStyle")  var menuBarLabelStyle  = "circle"
+    @AppStorage("refreshInterval")    var refreshInterval    = 300
     @AppStorage("esp32Enabled")       var esp32Enabled       = false
     @AppStorage("esp32IP")            var esp32IP            = ""
 
@@ -104,6 +105,20 @@ struct SettingsView: View {
 
                     Divider()
 
+                    // Refresh interval
+                    HStack {
+                        Text("Refresh every").font(.caption.weight(.medium))
+                        Picker("", selection: $refreshInterval) {
+                            Text("1 min").tag(60)
+                            Text("5 min").tag(300)
+                            Text("15 min").tag(900)
+                            Text("30 min").tag(1800)
+                        }
+                        .pickerStyle(.menu).labelsHidden().frame(width: 80)
+                    }
+
+                    Divider()
+
                     // Menu bar style
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Menu bar style").font(.caption.weight(.medium))
@@ -116,9 +131,14 @@ struct SettingsView: View {
                         .pickerStyle(.menu)
                         .labelsHidden()
 
-                        Toggle("Show provider labels (C: G:)", isOn: $menuBarLabels)
-                            .toggleStyle(.checkbox)
-                            .disabled(menuBarStyle == "dot")
+                        Picker("Provider label", selection: $menuBarLabelStyle) {
+                            Text("None").tag("none")
+                            Text("Letter — C: G:").tag("letter")
+                            Text("Circle — Ⓒ Ⓖ").tag("circle")
+                            Text("Emoji — 🤖 💬").tag("emoji")
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
                     }
                 }
                 .padding(4)

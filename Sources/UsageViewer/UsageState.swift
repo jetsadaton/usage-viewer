@@ -79,23 +79,33 @@ class UsageState: ObservableObject {
         let showClaude  = UserDefaults.standard.object(forKey: "showClaude")      as? Bool   ?? true
         let showClaude7d = UserDefaults.standard.object(forKey: "showClaude7d")   as? Bool   ?? true
         let showCodex   = UserDefaults.standard.object(forKey: "showCodex")       as? Bool   ?? true
-        let showLabels  = UserDefaults.standard.object(forKey: "menuBarLabels")   as? Bool   ?? true
+        let labelStyle  = UserDefaults.standard.string(forKey: "menuBarLabelStyle") ?? "circle"
         let style       = UserDefaults.standard.string(forKey: "menuBarStyle") ?? "percent"
+
+        func mkLabel(_ letter: String, _ emoji: String) -> String? {
+            switch labelStyle {
+            case "none":   return nil
+            case "emoji":  return emoji
+            case "circle": return letter == "C" ? "Ⓒ" : "Ⓖ"
+            default:       return "\(letter):"
+            }
+        }
 
         var parts: [String] = []
         if showClaude {
             if let d = claude.successValue {
-                parts.append(fmt(label: showLabels ? "C" : nil,
+                parts.append(fmt(label: mkLabel("C", "🤖"),
                                  primary: d.fiveHourPct,
                                  secondary: showClaude7d ? d.sevenDayPct : nil,
                                  style: style))
             } else if case .loading = claude { parts.append("C:…") }
         }
         if showCodex {
+            let showCodexSecondary = UserDefaults.standard.object(forKey: "showCodexSecondary") as? Bool ?? true
             if let d = codex.successValue {
-                parts.append(fmt(label: showLabels ? "G" : nil,
+                parts.append(fmt(label: mkLabel("G", "💬"),
                                  primary: Double(d.primaryPct),
-                                 secondary: nil,
+                                 secondary: showCodexSecondary ? d.secondaryPct.map(Double.init) : nil,
                                  style: style))
             } else if case .loading = codex { parts.append("G:…") }
         }
@@ -110,7 +120,7 @@ class UsageState: ObservableObject {
         }
         func pct(_ p: Double) -> String { "\(Int(p))%" }
 
-        let prefix = label.map { "\($0):" } ?? ""
+        let prefix = label ?? ""
         let peak   = max(primary, secondary ?? 0)
 
         switch style {

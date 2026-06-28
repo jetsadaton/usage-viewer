@@ -98,8 +98,11 @@ struct PopoverView: View {
         state.claude.successValue?.sevenDayPct
     }
     private var claudeResetInfo: String? {
-        guard let d = state.claude.successValue, let r = d.fiveHourResetsAt else { return nil }
-        return "resets \(resetLabel(r))"
+        guard let d = state.claude.successValue else { return nil }
+        var parts: [String] = []
+        if let r = d.fiveHourResetsAt { parts.append("5h resets \(resetLabel(r))") }
+        if let r = d.sevenDayResetsAt { parts.append("7d resets \(resetLabel(r))") }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
     private var claudeError: String? {
         if case .error(let msg) = state.claude { return msg }
@@ -123,12 +126,11 @@ struct PopoverView: View {
         return windowLabel(s)
     }
     private var codexResetInfo: String? {
-        guard let d = state.codex.successValue, let r = d.primaryResetsAt else { return nil }
-        var s = "resets \(resetLabel(r))"
-        if let r2 = d.secondaryResetsAt, let label = codexSecondaryLabel {
-            s += " · \(label) resets \(resetLabel(r2))"
-        }
-        return s
+        guard let d = state.codex.successValue else { return nil }
+        var parts: [String] = []
+        if let r = d.primaryResetsAt   { parts.append("\(codexWindowLabel ?? "5h") resets \(resetLabel(r))") }
+        if let r = d.secondaryResetsAt { parts.append("\(codexSecondaryLabel ?? "7d") resets \(resetLabel(r))") }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
     private func windowLabel(_ seconds: Int) -> String {
         guard seconds > 0 else { return "?" }
@@ -144,9 +146,12 @@ struct PopoverView: View {
     private func resetLabel(_ date: Date) -> String {
         let delta = date.timeIntervalSinceNow
         guard delta > 0 else { return "soon" }
-        let h = Int(delta / 3600)
+        let d = Int(delta / 86400)
+        let h = Int(delta.truncatingRemainder(dividingBy: 86400) / 3600)
         let m = Int(delta.truncatingRemainder(dividingBy: 3600) / 60)
-        return h > 0 ? "in \(h)h \(m)m" : "in \(m)m"
+        if d > 0 { return "in \(d)d \(h)h \(m)m" }
+        if h > 0 { return "in \(h)h \(m)m" }
+        return "in \(m)m"
     }
 }
 

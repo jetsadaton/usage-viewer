@@ -2,6 +2,10 @@ import AppKit
 import SwiftUI
 import Combine
 
+private extension Int {
+    var nonZero: Int? { self == 0 ? nil : self }
+}
+
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
@@ -42,12 +46,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor in await state.refresh() }
         }
 
-        // Refresh every 5 minutes
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                await self?.state.refresh()
-            }
-        }
+        scheduleRefreshTimer()
+
+        // Re-schedule when interval setting changes
+        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.rescheduleTimerIfNeeded() }
+            .store(in: &cancellables)
 
         wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didWakeNotification,
@@ -112,6 +117,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func refreshNow() {
         Task { @MainActor in await state.refresh() }
+    }
+
+    private var currentTimerInterval: TimeInterval = 0
+
+    private func scheduleRefreshTimer() {
+        let interval = TimeInterval(UserDefaults.standard.integer(forKey: "refreshInterval").nonZero ?? 300)
+        currentTimerInterval = interval
+        refreshTimer?.invalidate()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in await self?.state.refresh() }
+        }
+    }
+
+    private func rescheduleTimerIfNeeded() {
+        updateTitle()
+        let interval = TimeInterval(UserDefaults.standard.integer(forKey: "refreshInterval").nonZero ?? 300)
+        guard interval != currentTimerInterval else { return }
+        scheduleRefreshTimer()
     }
 
     private func updateTitle() {
