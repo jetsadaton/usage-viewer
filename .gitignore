@@ -1,0 +1,5 @@
+.build/
+*.o
+*.d
+UsageViewer.app/
+.DS_Store
